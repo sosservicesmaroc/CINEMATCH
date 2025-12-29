@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineMatch - Smart Movie Recommendations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            scroll-behavior: smooth;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- Navigation Bar -->
+    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-film text-2xl text-white"></i>
+                    <span class="text-2xl font-bold text-white">CineMatch</span>
+                </div>
+                <div class="text-sm text-gray-200 hidden sm:block">Discover Your Next Favorite Movie</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="min-h-screen bg-gray-900">
+        <!-- Hero Section -->
+        <section class="gradient-bg py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
+                    Find Your Perfect Movie
+                </h1>
+                <p class="text-xl text-gray-200">
+                    Search by title or select your mood to get personalized recommendations
+                </p>
+            </div>
+        </section>
+
+        <!-- Search & Recommendation Section -->
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Title Search Card -->
+                <div class="bg-gray-800 rounded-lg shadow-lg p-8 card-hover">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-search text-3xl text-purple-400 mr-4"></i>
+                        <h2 class="text-2xl font-bold text-white">Search by Title</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <input 
+                            type="text" 
+                            id="titleInput" 
+                            placeholder="Enter movie title (e.g., Inception, The Dark Knight)"
+                            class="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                        />
+                        <button 
+                            id="searchBtn" 
+                            onclick="performTitleSearch()"
+                            class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-search"></i>
+                            <span>Search & Recommend</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mood-Based Recommendation Card -->
+                <div class="bg-gray-800 rounded-lg shadow-lg p-8 card-hover">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-smile text-3xl text-yellow-400 mr-4"></i>
+                        <h2 class="text-2xl font-bold text-white">Recommend by Mood</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <select 
+                            id="emotionSelect"
+                            class="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        >
+                            <option value="">Select your mood...</option>
+                        </select>
+                        <button 
+                            id="emotionBtn"
+                            onclick="performEmotionSearch()"
+                            class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-heart"></i>
+                            <span>Get Recommendations</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <!-- Base Movie Info -->
+            <div id="baseMovieInfo" class="mb-8"></div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="bg-red-900 border-l-4 border-red-500 text-red-100 p-4 mb-8 rounded hidden" role="alert">
+                <p id="errorText"></p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12 hidden">
+                <div class="inline-block">
+                    <div class="loading-spinner"></div>
+                    <p class="text-gray-400 mt-4">Loading recommendations...</p>
+                </div>
+            </div>
+
+            <!-- Results Grid -->
+            <div id="resultsContainer" class="fade-in">
+                <h3 class="text-2xl font-bold text-white mb-6">Recommended Movies</h3>
+                <div id="moviesGrid" class="movie-grid"></div>
+            </div>
+        </section>
+
+        <!-- Empty State -->
+        <section id="emptyState" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+            <i class="fas fa-popcorn text-6xl text-gray-600 mb-4"></i>
+            <p class="text-xl text-gray-400">Start by searching for a movie or selecting your mood above</p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 border-t border-gray-700 py-8 px-4 sm:px-6 lg:px-8 mt-12">
+        <div class="max-w-6xl mx-auto text-center text-gray-400">
+            <p>CineMatch &copy; 2024 - Powered by TMDB API</p>
+        </div>
+    </footer>
+
+    <script>
+        // Load emotions on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmotions();
+            
+            // Allow Enter key to trigger search
+            document.getElementById('titleInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performTitleSearch();
+            });
+            
+            document.getElementById('emotionSelect').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performEmotionSearch();
+            });
+        });
+
+        function loadEmotions() {
+            fetch('/api/emotions')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('emotionSelect');
+                    data.emotions.forEach(emotion => {
+                        const option = document.createElement('option');
+                        option.value = emotion;
+                        option.textContent = emotion;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading emotions:', error);
+                    showError('Failed to load emotions. Please refresh the page.');
+                });
+        }
+
+        function performTitleSearch() {
+            const title = document.getElementById('titleInput').value.trim();
+            
+            if (!title) {
+                showError('Please enter a movie title.');
+                return;
+            }
+            
+            performSearch({
+                endpoint: '/api/search',
+                data: { title: title },
+                searchType: 'title'
+            });
+        }
+
+        function performEmotionSearch() {
+            const emotion = document.getElementById('emotionSelect').value;
+            
+            if (!emotion) {
+                showError('Please select a mood.');
+                return;
+            }
+            
+            performSearch({
+                endpoint: '/api/emotion-search',
+                data: { emotion: emotion },
+                searchType: 'emotion'
+            });
+        }
+
+        function performSearch(config) {
+            const searchBtn = document.getElementById(config.searchType === 'title' ? 'searchBtn' : 'emotionBtn');
+            const originalText = searchBtn.innerHTML;
+            
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<div class="loading-spinner"></div><span>Searching...</span>';
+            
+            hideError();
+            showLoadingState();
+            
+            fetch(config.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config.data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = originalText;
+                
+                if (data.error) {
+                    showError(data.error);
+                    hideLoadingState();
+                    return;
+                }
+                
+                displayResults(data);
+                hideLoadingState();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = originalText;
+                showError('An unexpected error occurred. Please try again.');
+                hideLoadingState();
+            });
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const emptyState = document.getElementById('emptyState');
+            const baseMovieInfo = document.getElementById('baseMovieInfo');
+            const moviesGrid = document.getElementById('moviesGrid');
+            
+            emptyState.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            
+            // Display base movie info
+            if (data.base_movie) {
+                baseMovieInfo.innerHTML = `
+                    <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg p-6 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-2">
+                            <a href="/movie/${data.base_movie_id}" class="hover:underline">
+                                ${data.base_movie}
+                            </a>
+                        </h2>
+                        <p class="text-gray-200">Based on your search, here are similar movies:</p>
+                    </div>
+                `;
+            } else if (data.emotion) {
+                baseMovieInfo.innerHTML = `
+                    <div class="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-lg p-6 mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-2">Movies for ${data.emotion}</h2>
+                        <p class="text-gray-200">Perfect for your current mood:</p>
+                    </div>
+                `;
+            }
+            
+            // Display movies
+            moviesGrid.innerHTML = '';
+            data.results.forEach(movie => {
+                const movieCard = createMovieCard(movie);
+                moviesGrid.appendChild(movieCard);
+            });
+        }
+
+        function createMovieCard(movie) {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-800 rounded-lg overflow-hidden shadow-lg card-hover cursor-pointer';
+            
+            const posterUrl = movie.poster_path || 'https://via.placeholder.com/200x300?text=No+Poster';
+            const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
+            
+            card.innerHTML = `
+                <a href="/movie/${movie.id}" class="block h-full">
+                    <div class="relative overflow-hidden bg-gray-700 h-64">
+                        <img src="${posterUrl}" alt="${movie.title}" class="w-full h-full object-cover">
+                        <div class="absolute top-0 right-0 bg-yellow-500 text-gray-900 px-3 py-1 m-2 rounded-full text-sm font-bold">
+                            ${movie.rating}
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-white mb-1 line-clamp-2">${movie.title}</h3>
+                        <p class="text-sm text-gray-400 mb-2">${releaseYear}</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs bg-purple-600 text-white px-2 py-1 rounded">${movie.score}</span>
+                            <span class="text-xs text-gray-400">${movie.genres}</span>
+                        </div>
+                        <p class="text-sm text-gray-300 line-clamp-3">${movie.overview}</p>
+                    </div>
+                </a>
+            `;
+            
+            return card;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        function showLoadingState() {
+            document.getElementById('loadingState').classList.remove('hidden');
+        }
+
+        function hideLoadingState() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
